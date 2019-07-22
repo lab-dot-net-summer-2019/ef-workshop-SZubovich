@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SamuraiApp.Domain;
+using SamuraiApp.Data.Mapping;
 
 namespace SamuraiApp.Data
 {
@@ -11,30 +12,21 @@ namespace SamuraiApp.Data
 
         public SamuraiContext(DbContextOptions<SamuraiContext> options)
             : base(options)
-        { }
-        
+        { }        
 
         public DbSet<Samurai> Samurais { get; set; }
         public DbSet<Quote> Quotes { get; set; }
         public DbSet<Battle> Battles { get; set; }
+        public DbSet<Clan> Clans { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<SamuraiBattle>()
-                .HasKey(s => new { s.BattleId, s.SamuraiId });
-
-            //modelBuilder.Entity<SamuraiBattle>()
-            //    .Property(sb => sb.KillStreak);
-
-            modelBuilder.Entity<SamuraiBattle>()
-                .HasOne(sb => sb.Battle)
-                .WithMany(b => b.SamuraiBattles)
-                .HasForeignKey(sb => new { sb.BattleId });
-
-            modelBuilder.Entity<SamuraiBattle>()
-                .HasOne(sb => sb.Samurai)
-                .WithMany(s => s.SamuraiBattles)
-                .HasForeignKey(sb => new { sb.SamuraiId });
+            modelBuilder.ApplyConfiguration(new BattleMapper());
+            modelBuilder.ApplyConfiguration(new ClanMapper());
+            modelBuilder.ApplyConfiguration(new SamuraiMapper());
+            modelBuilder.ApplyConfiguration(new SamuraiBattleMapper());
+            modelBuilder.ApplyConfiguration(new SecretIdentityMapper());
+            modelBuilder.ApplyConfiguration(new QuoteMapper());
 
             base.OnModelCreating(modelBuilder);
         }
@@ -42,7 +34,7 @@ namespace SamuraiApp.Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseLazyLoadingProxies().UseSqlServer(
-                 "Server=DESKTOP-MABFP66;Database=SamuraiAppDataCore;Trusted_Connection=True;");
+                 "Server=(localdb)\\MSSQLLocalDB;Database=SamuraiAppDataCore;Trusted_Connection=True;", b => b.MigrationsAssembly("SamuraiApp.Data"));
         }
     }
 }
